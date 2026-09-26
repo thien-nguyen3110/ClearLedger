@@ -1,0 +1,18 @@
+# Keep local documentation and environment files out of the repository.
+*.[mM][dD]
+.env*
+*.env
+*.env.*
+coordination/
+docs/*
+!docs/architecture.mmd
+
+# Dependencies, generated assets, and runtime data.
+node_modules/
+web/dist/
+backend/data/
+backend/clearledger
+backend/clearledger.exe
+__pycache__/
+*.pyc
+*.log

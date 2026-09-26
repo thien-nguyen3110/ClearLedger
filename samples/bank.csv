@@ -1,0 +1,8 @@
+id,payout,currency,date,gross_cents,fee_cents,description
+bn_201,PO-1001,USD,2026-09-03,19350,0,Processor settlement 1001
+bn_202,PO-1002,USD,2026-09-04,28600,0,Processor settlement 1002
+bn_204a,PO-1004,USD,2026-09-06,40740,0,Processor settlement 1004
+bn_204b,PO-1004,USD,2026-09-06,40740,0,Second row with same payout reference
+bn_205,PO-1005,USD,2026-09-07,16340,0,Processor settlement 1005
+bn_206,PO-1006,USD,2026-09-08,14550,0,Processor settlement 1006
+bn_207,PO-1007,USD,2026-09-08,9200,0,Unidentified processor settlement

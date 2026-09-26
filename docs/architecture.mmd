@@ -1,0 +1,27 @@
+%% ClearLedger application architecture
+%% web/: React workspace bundled with esbuild and served by the Go API.
+%% backend/: HTTP API, reconciliation domain, storage, agent, and event worker.
+%% compose.yaml: PostgreSQL, Redis, Kafka, API, worker, and optional Ollama.
+%% deploy/: optional Caddy reverse proxy and Cloudflare Tunnel configuration.
+%% samples/: synthetic CSV inputs. scripts/: deployment acceptance check.
+%% .github/workflows/: backend tests, static checks, frontend build, Compose validation.
+%% Local mode uses JSON file storage and direct investigations, without outbox or worker.
+%% PostgreSQL stores one bounded JSONB workspace aggregate and a transactional outbox.
+%% Kafka delivery is at least once; application receipts make effects idempotent.
+%% Agent drafts require human review and cannot execute financial actions.
+flowchart TD
+    UI[React workspace] --> API[Go HTTP API]
+    CSV[Synthetic CSV samples or user imports] --> API
+    API --> PG[(PostgreSQL workspace state and outbox)]
+    API --> R[(Redis investigation rate limits)]
+    API --> LOCAL[(JSON file in local mode)]
+    PG --> O[Outbox relay]
+    O --> K[Kafka reconciliation events]
+    K --> W[Go investigation worker]
+    W --> A[Bounded agent controller]
+    API --> A
+    A --> M[Optional local Ollama model]
+    A --> E[Case evidence tools]
+    W --> PG
+    API --> REVIEW[Human review notes]
+    REVIEW --> PG

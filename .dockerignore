@@ -1,0 +1,13 @@
+.env
+**/.env*
+**/*.env
+**/*.env.*
+**/*.md
+.git
+web/node_modules
+web/dist
+backend/data
+backend/clearledger
+backend/clearledger.exe
+coordination
+docs

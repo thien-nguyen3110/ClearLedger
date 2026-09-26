@@ -1,0 +1,8 @@
+# Optional named Cloudflare Tunnel. This is configuration, not a provisioned service.
+# Authenticate cloudflared, create your tunnel, and replace the values below.
+tunnel: REPLACE_WITH_TUNNEL_UUID
+credentials-file: /absolute/path/to/tunnel-credentials.json
+ingress:
+  - hostname: app.your-domain.example
+    service: http://127.0.0.1:8080
+  - service: http_status:404

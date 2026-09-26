@@ -1,0 +1,9 @@
+id,payout,currency,date,gross_cents,fee_cents,description
+ch_101,PO-1001,USD,2026-09-01,12500,400,Online order 101
+ch_102,PO-1001,USD,2026-09-01,7500,250,Online order 102
+ch_103,PO-1002,USD,2026-09-02,30000,900,Workshop registration
+ch_104,PO-1003,USD,2026-09-03,18000,600,Online order 104
+ch_105,PO-1004,USD,2026-09-04,42000,1260,September subscription batch
+ch_106,PO-1005,USD,2026-09-05,22000,660,Online order 106
+re_106,PO-1005,USD,2026-09-05,-5000,0,Partial refund for order 106
+ch_107,PO-1006,USD,2026-09-06,15000,450,Online order 107

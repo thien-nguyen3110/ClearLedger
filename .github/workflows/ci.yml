@@ -1,0 +1,22 @@
+name: verify
+on: [push, pull_request]
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: {go-version: '1.24.6', cache-dependency-path: backend/go.sum}
+      - run: go test -race ./...
+        working-directory: backend
+      - run: go vet ./...
+        working-directory: backend
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: web/package-lock.json}
+      - run: npm ci --ignore-scripts && npm run build
+        working-directory: web
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+        env:
+          API_TOKEN: ci-only-configuration-token-123456
+          POSTGRES_PASSWORD: ci-only-configuration-password

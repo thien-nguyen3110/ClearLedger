@@ -1,0 +1,6 @@
+# Optional fully open-source origin proxy on a Linux server you control.
+# DNS and network reachability must already point to this server.
+app.your-domain.example {
+    reverse_proxy 127.0.0.1:8080
+    encode gzip
+}
