@@ -1,0 +1,74 @@
+{
+  "dataset": "heybadrinath/reconriver-synthetic-reconciliation",
+  "license": "CC-BY-4.0",
+  "attribution": "ReconRiver Synthetic Reconciliation Scenarios by heybadrinath, https://huggingface.co/datasets/heybadrinath/reconriver-synthetic-reconciliation",
+  "source_revision": "2f128f1059b1faee78d73c0ffc0f5e745c075d9b",
+  "source_scenario": "clean-settlement",
+  "source_generator_version": "1.1.0",
+  "source_sha256": {
+    "processor_transactions.csv": "cbf296dedcb4f8b4f4b779f33d068e9e7652890316354269ff909b4b572bd81f",
+    "bank_settlements.csv": "fd696c30cae4deed55b1610a1d0eb3e35fa2a70b8ada65eefadd38eda24cc19c",
+    "expected_reconciliation.csv": "f66de6091706b4497f208f1909ce232f2280adc15200ed30033a19e4f501ff58"
+  },
+  "rules_version": "clearledger-curation-v1",
+  "purpose": "smoke test: every batch settles exactly",
+  "id_prefix": "CS",
+  "source_rows": {
+    "processor": 100,
+    "bank": 7,
+    "settlement_labels": 7
+  },
+  "curated": {
+    "processor_records": 100,
+    "bank_records": 7,
+    "payouts": 7,
+    "expected_kinds": {
+      "matched": 7
+    }
+  },
+  "quarantined": {
+    "R1_NON_USD": {
+      "batches": 0,
+      "rows": 0
+    },
+    "R2_INVALID_ROW": {
+      "batches": 0,
+      "rows": 0
+    },
+    "R3_REPEATED_SOURCE_ID": {
+      "batches": 0,
+      "rows": 0
+    },
+    "R4_NO_LABEL": {
+      "batches": 0,
+      "rows": 0
+    },
+    "R5_OUTCOME_NOT_MODELED": {
+      "batches": 0,
+      "rows": 0
+    },
+    "R6_LABEL_ARITHMETIC": {
+      "batches": 0,
+      "rows": 0
+    },
+    "R7_LABEL_WITHOUT_ROWS": {
+      "batches": 0,
+      "rows": 0
+    }
+  },
+  "rules": {
+    "R1_NON_USD": "batch has a non-USD processor or bank row (ClearLedger v0 is USD-only)",
+    "R2_INVALID_ROW": "batch has a row with an invalid ID, amount, date, fee or net",
+    "R3_REPEATED_SOURCE_ID": "a source ID appears more than once; the label counts it twice, ClearLedger keeps one record per ID",
+    "R4_NO_LABEL": "batch has no settlement ground truth",
+    "R5_OUTCOME_NOT_MODELED": "ground-truth outcome has no ClearLedger equivalent (late settlement window, duplicate bank entry, currency mismatch)",
+    "R6_LABEL_ARITHMETIC": "the label difference does not equal bank credits minus processor net for the batch rows",
+    "R7_LABEL_WITHOUT_ROWS": "a settlement label names a batch that has no processor or bank rows (logged; nothing to import)"
+  },
+  "curated_sha256": {
+    "processor.csv": "2e34e21d6bdd456f2940570bc37e1373e32ea7018d336dd1df6189de86b0d9a0",
+    "bank.csv": "ec62de5ac868599c74fe0746ef0171ad1c3b77f15617f16f5233f88caedb06d0",
+    "labels.csv": "336d895e9fb5c45805fd78eb989dc002d5010dbcfb761f614b76859cd1ce9562",
+    "quarantine.csv": "7edd710c5e0e5cc96faa165c0e4304fa074d7aca8a99349abae54142f80ed04a"
+  }
+}

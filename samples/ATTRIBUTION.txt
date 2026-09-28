@@ -1,0 +1,9 @@
+samples/processor.csv and samples/bank.csv are what "Load ReconRiver dataset"
+(POST /api/demo) imports into an empty workspace: the curated ReconRiver
+clean-settlement and mixed-exceptions scenarios from backend/testdata/reconriver/,
+joined and sorted by ID (651 processor + 98 bank records, 107 payouts).
+
+Derived from "ReconRiver Synthetic Reconciliation Scenarios" by heybadrinath,
+https://huggingface.co/datasets/heybadrinath/reconriver-synthetic-reconciliation
+licensed CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Synthetic data only. Changes made are listed in backend/testdata/reconriver/ATTRIBUTION.txt.

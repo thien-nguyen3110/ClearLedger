@@ -1,0 +1,2 @@
+# Curated fixtures are checksummed in manifest.json; keep their bytes exact.
+* -text

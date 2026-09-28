@@ -1,0 +1,27 @@
+ReconRiver data in ClearLedger
+==============================
+
+Derived from "ReconRiver Synthetic Reconciliation Scenarios" by heybadrinath,
+https://huggingface.co/datasets/heybadrinath/reconriver-synthetic-reconciliation
+source revision 2f128f1059b1faee78d73c0ffc0f5e745c075d9b,
+licensed CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+
+The data is entirely synthetic: no genuine people, payments, cards or accounts.
+
+Changes made: rows were converted to ClearLedger's CSV format and integer cents,
+relabeled to ClearLedger case kinds (MATCHED -> matched, AMOUNT_MISMATCH ->
+amount_mismatch, MISSING_BANK_SETTLEMENT -> awaiting_deposit, MISSING_PROCESSOR ->
+unexpected_deposit), given scenario ID prefixes (CS:, MX:), and filtered by the
+clearledger-curation-v1 rules. A batch is dropped whole when:
+
+  R1_NON_USD              any processor or bank row is not USD
+  R2_INVALID_ROW          a row has a bad ID, amount, date or fee, or net != gross - fee
+  R3_REPEATED_SOURCE_ID   a source ID occurs more than once
+  R4_NO_LABEL             the batch has no settlement ground truth
+  R5_OUTCOME_NOT_MODELED  the label is LATE_SETTLEMENT, DUPLICATE_BANK_ENTRY or CURRENCY_MISMATCH
+  R6_LABEL_ARITHMETIC     the label's difference is not bank credits minus processor net
+  R7_LABEL_WITHOUT_ROWS   a label names a batch with no rows (logged only)
+
+Every dropped row is listed with its rule in each scenario's quarantine.csv, and
+manifest.json records source and curated checksums. Regenerate with
+`node scripts/reconriver.mjs curate`; never edit the CSV files by hand.
