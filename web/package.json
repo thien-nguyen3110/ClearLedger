@@ -1,6 +1,19 @@
 {
- "name":"clearledger-web", "version":"0.1.0", "private":true, "license":"MIT", "type":"module",
- "scripts":{"build":"node build.mjs"},
- "dependencies":{"react":"19.0.0","react-dom":"19.0.0"},
- "devDependencies":{"esbuild":"0.25.0"}
+ "name": "clearledger-web",
+ "version": "0.1.0",
+ "private": true,
+ "license": "MIT",
+ "type": "module",
+ "scripts": {
+  "build": "node build.mjs",
+  "test:e2e": "npm run build && playwright test"
+ },
+ "dependencies": {
+  "react": "19.0.0",
+  "react-dom": "19.0.0"
+ },
+ "devDependencies": {
+  "@playwright/test": "^1.63.0",
+  "esbuild": "0.25.0"
+ }
 }
