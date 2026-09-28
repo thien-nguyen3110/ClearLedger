@@ -16,6 +16,7 @@ import (
 
 const maxRecords = 10000
 
+var ErrInvalid = errors.New("invalid request")
 var ErrConflict = errors.New("conflict: record or case changed")
 var ErrMissing = errors.New("case not found")
 
@@ -77,7 +78,12 @@ func digest(v string) string { d := sha256.Sum256([]byte(v)); return hex.EncodeT
 func (s *State) audit(action, detail string) {
 	s.Audit = append(s.Audit, Audit{time.Now().UTC().Format(time.RFC3339), action, detail})
 }
-func parseCSV(source, body string) ([]Record, error) {
+func parseCSV(source, body string) (_ []Record, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("%w: %v", ErrInvalid, err)
+		}
+	}()
 	if source != "processor" && source != "bank" {
 		return nil, errors.New("source must be processor or bank")
 	}
@@ -137,7 +143,7 @@ func parseCSV(source, body string) ([]Record, error) {
 }
 func importRecords(s *State, source, body, key string) error {
 	if len(key) < 8 || len(key) > 128 {
-		return errors.New("Idempotency-Key must contain 8 to 128 characters")
+		return fmt.Errorf("%w: Idempotency-Key must contain 8 to 128 characters", ErrInvalid)
 	}
 	hash := digest(source + "\n" + body)
 	if previous, ok := s.Imports[key]; ok {
@@ -168,7 +174,7 @@ func importRecords(s *State, source, body, key string) error {
 		}
 	}
 	if len(s.Records)+added > maxRecords {
-		return errors.New("workspace capacity is 10000 records in this release")
+		return fmt.Errorf("%w: workspace capacity is 10000 records in this release", ErrInvalid)
 	}
 	for id, r := range incoming {
 		s.Records[id] = r
@@ -250,7 +256,7 @@ func caseByID(s State, id string) (Case, error) {
 	return Case{}, ErrMissing
 }
 func validateProposal(c Case, p Proposal) error {
-	if len(p.Summary) < 10 || len(p.Summary) > 2000 {
+	if len(strings.TrimSpace(p.Summary)) < 10 || len(p.Summary) > 2000 {
 		return errors.New("proposal summary must contain 10 to 2000 characters")
 	}
 	switch p.Action {
@@ -258,14 +264,19 @@ func validateProposal(c Case, p Proposal) error {
 	default:
 		return errors.New("action is not allowed")
 	}
-	if len(p.Evidence) == 0 {
+	if len(p.Evidence) == 0 || len(p.Evidence) > len(c.Evidence) {
 		return errors.New("proposal must cite evidence")
 	}
 	allowed := map[string]bool{}
 	for _, id := range c.Evidence {
 		allowed[id] = true
 	}
+	seen := map[string]bool{}
 	for _, id := range p.Evidence {
+		if seen[id] {
+			return errors.New("proposal contains duplicate evidence IDs")
+		}
+		seen[id] = true
 		if !allowed[id] {
 			return errors.New("proposal cites evidence outside this case")
 		}
@@ -291,7 +302,7 @@ func saveProposal(s *State, id, fp string, p Proposal) error {
 }
 func reviewCase(s *State, id, fp, note string) error {
 	if len(strings.TrimSpace(note)) < 10 || len(note) > 1000 {
-		return errors.New("review note must contain 10 to 1000 characters")
+		return fmt.Errorf("%w: review note must contain 10 to 1000 characters", ErrInvalid)
 	}
 	for i, c := range s.Cases {
 		if c.ID == id {

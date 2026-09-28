@@ -20,8 +20,15 @@ services:
       interval: 5s
       retries: 10
     restart: unless-stopped
+  kafka-data-init:
+    image: alpine:3.22
+    user: "0:0"
+    command: ["chown", "1000:1000", "/data"]
+    volumes: ["kafka-data:/data"]
   kafka:
     image: apache/kafka:4.3.1
+    depends_on:
+      kafka-data-init: {condition: service_completed_successfully}
     environment:
       CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
       KAFKA_NODE_ID: 1
@@ -60,8 +67,8 @@ services:
       KAFKA_BROKERS: kafka:9092
       API_TOKEN: ${API_TOKEN:?Set API_TOKEN to at least 24 characters in .env}
       OLLAMA_URL: ${OLLAMA_URL:-}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
-    ports: ["127.0.0.1:8080:8080"]
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b-instruct-2507-q4_K_M}
+    ports: ["127.0.0.1:${CLEARLEDGER_PORT:-8080}:8080"]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -78,6 +85,19 @@ services:
     depends_on:
       api: {condition: service_healthy}
     restart: unless-stopped
+  backend-test:
+    profiles: ["test"]
+    build:
+      context: .
+      target: backend-test
+    environment:
+      INTEGRATION_DATABASE_URL: postgres://clearledger:${POSTGRES_PASSWORD}@postgres:5432/clearledger?sslmode=disable
+      INTEGRATION_REDIS_URL: redis://redis:6379/15
+      INTEGRATION_KAFKA_BROKERS: kafka:9092
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
   ollama:
     profiles: ["ai"]
     image: ollama/ollama:latest

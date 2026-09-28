@@ -15,7 +15,7 @@ import (
 
 func fixture(t *testing.T, source string) string {
 	t.Helper()
-	b, e := os.ReadFile("../samples/" + source + ".csv")
+	b, e := os.ReadFile("testdata/samples/" + source + ".csv")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -129,7 +129,7 @@ func TestAgentToolLoopAndEvidenceBoundary(t *testing.T) {
 		}
 		if turn == 3 {
 			name = "propose_resolution"
-			args = rulesProposal(c)
+			args = proposalArgs(c)
 		}
 		writeJSON(w, 200, map[string]any{"message": map[string]any{"role": "assistant", "tool_calls": []any{map[string]any{"function": map[string]any{"name": name, "arguments": args}}}}})
 	}))
@@ -195,7 +195,7 @@ func TestHTTPAuthAndOrigin(t *testing.T) {
 		token, origin string
 		status        int
 	}{{"", "", 401}, {"test-token", "https://attacker.example", 403}, {"test-token", "", 200}} {
-		r := httptest.NewRequest("GET", "/api/state", nil)
+		r := localRequest("GET", "/api/state", nil)
 		r.Header.Set("Authorization", "Bearer "+tc.token)
 		r.Header.Set("Origin", tc.origin)
 		w := httptest.NewRecorder()
