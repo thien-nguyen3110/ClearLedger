@@ -541,7 +541,7 @@ function App() {
           </dl>
           <nav aria-label="Workspace sections">{VIEWS.map(([name, icon], i) =>
             <button key={name} className={view === name ? 'nav active' : 'nav'} aria-current={view === name ? 'page' : undefined} onClick={() => setView(name)} aria-keyshortcuts={String(i + 1)}>
-              <span className="fkey" aria-hidden="true">{i + 1}</span><Icon name={icon} />{name}{name === 'Reconciliation' && summary.open > 0 && <span className="navcount" aria-label={summary.open + ' need review'}>{summary.open}</span>}
+              <span className="fkey" aria-hidden="true">{i + 1}</span><Icon name={icon} /><span className="navlabel">{name}</span>{name === 'Reconciliation' && summary.open > 0 && <span className="navcount" aria-label={summary.open + ' need review'}>{summary.open}</span>}
             </button>)}</nav>
           <div className="sidebarbottom">
             <p><span className="statusdot" aria-hidden="true" />{config?.storage === 'postgres' ? 'PostgreSQL workspace' : 'Local-first workspace'}</p>
