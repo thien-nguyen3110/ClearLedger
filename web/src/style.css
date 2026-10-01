@@ -410,6 +410,12 @@ th[aria-sort=ascending] .sortmark, th[aria-sort=descending] .sortmark { opacity:
 .rulesresults .tablewrap { max-height: 420px; }
 .rulesresults th .tag { margin-left: 6px; }
 .rulesresults tbody th small { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; font-weight: 400; }
+/* Payout references are long identifiers with colons (MX:SYNTH-BATCH-...); wrap, never cut. */
+.rulesresults tbody th { white-space: normal; overflow-wrap: anywhere; min-width: 12ch; }
+.rulesresults .linkbutton { overflow-wrap: anywhere; text-align: left; justify-content: flex-start; }
+.rulesresults div.none p { margin: 0; }
+.rulesresults div.none p + p { margin-top: 6px; }
+.checkline { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; cursor: pointer; }
 .rulesresults small.inline { display: inline; margin: 0; }
 
 /* Activity prints as a session log */

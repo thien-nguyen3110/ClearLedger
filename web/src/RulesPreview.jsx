@@ -85,7 +85,11 @@ export function RulesPreview({ cases, records, onOpenCase }) {
         <tbody>{result.tolerance.slice(0, SHOW).map(({ case: c }) => <tr key={c.id}>
           <th scope="row">{open(c)}</th><td className="num">{money(c.expected_cents)}</td><td className="num">{money(c.actual_cents)}</td><td className="num">{signedMoney(c.delta_cents)}</td>
         </tr>)}</tbody>
-      </table></div><Shown total={result.tolerance.length} /></> : <p className="none">No open amount mismatch is within {money(rules.amountCents)}.</p>}
+      </table></div><Shown total={result.tolerance.length} /></> : <div className="none">
+        <p>No open amount mismatch is within {money(rules.amountCents)}.</p>
+        {result.nearest && <p>The smallest open difference is {money(result.nearest.gap)} ({plural(result.nearest.count, 'payout', 'payouts')}).{' '}
+          {result.nearest.gap <= RULE_LIMITS.amountCents && <button type="button" className="linkbutton" onClick={() => setText(t => ({ ...t, amount: (result.nearest.gap / 100).toFixed(2) }))}>Use {money(result.nearest.gap)}</button>}</p>}
+      </div>}
 
       <h3>Deposit under another reference <span className="count">{result.pairs.length}</span></h3>
       <p className="muted">An awaiting payout and an unexpected deposit with matching amounts and nearby dates.</p>

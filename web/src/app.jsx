@@ -6,7 +6,7 @@ import { Icon } from './Icon.jsx';
 import { Logo } from './Logo.jsx';
 import { CaseDetail } from './CaseDetail.jsx';
 import { RulesPreview } from './RulesPreview.jsx';
-import { AUTO_HINTS, FORMAT_LABELS, REFERENCE_FIELDS, formatFamily, prepareImport } from './statement.js';
+import { AUTO_HINTS, FORMAT_LABELS, REFERENCE_FIELDS, formatFamily, prepareImport, skipSummary } from './statement.js';
 import {
   activityGroup, activityLabel, amountQuery, asOfDate, bridge, closeProgress, configModeLabel, csvCell,
   daysBetween, describeDiff, describeError, diffStates, exceptionKinds, kindLabels, lastDate, money,
@@ -69,6 +69,7 @@ function App() {
   const [prepared, setPrepared] = useState(null);
   const [refField, setRefField] = useState('auto');
   const [refPattern, setRefPattern] = useState('');
+  const [includeDebits, setIncludeDebits] = useState(true);
   const [activityFilter, setActivityFilter] = useState('all');
   const [picked, setPicked] = useState(() => new Set());
   const [bulkNote, setBulkNote] = useState('');
@@ -162,14 +163,14 @@ function App() {
     let cancelled = false;
     file.text().then(text => {
       if (cancelled) return;
-      const p = prepareImport(text, { referenceField: refField, pattern: refPattern });
+      const p = prepareImport(text, { referenceField: refField, pattern: refPattern, includeDebits });
       // A statement only carries bank deposits, so it always imports as the bank source.
       if (p.converted && source !== 'bank') setSource('bank');
       setPrepared(p);
       setPreview(p.csv ? previewCSV(p.converted ? 'bank' : source, p.csv) : null);
     }).catch(() => { if (!cancelled) { setPrepared(null); setPreview(null); } });
     return () => { cancelled = true; };
-  }, [file, source, refField, refPattern]);
+  }, [file, source, refField, refPattern, includeDebits]);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [log]);
 
@@ -718,15 +719,17 @@ function App() {
                 <h2>Import records</h2>
                 <p>Use one currency and stable record IDs. Importing the same records again won&rsquo;t duplicate them.</p>
                 <label>Record source<select value={source} onChange={e => setSource(e.target.value)} disabled={!!prepared?.converted} aria-describedby={prepared?.converted ? 'source-hint' : undefined}><option value="processor">Processor activity</option><option value="bank">Bank deposits</option></select>
-                  {prepared?.converted && <small id="source-hint" className="fieldhint">Bank statements always import as bank deposits.</small>}</label>
-                <label className="filedrop"><Icon name="upload" /><strong>{file ? file.name : 'Choose a CSV or bank statement'}</strong><small>CSV, camt.053 XML, or BAI2 &middot; up to 2 MB per import &middot; 10,000 records per workspace</small><input aria-label="Choose import file" type="file" accept=".csv,text/csv,.xml,application/xml,text/xml,.bai,.bai2,.txt" onChange={e => { setFile(e.target.files[0] || null); setRefField('auto'); setRefPattern(''); }} /></label>
+                  {prepared?.converted && <small id="source-hint" className="fieldhint">A bank statement always imports as bank records.</small>}</label>
+                <label className="filedrop"><Icon name="upload" /><strong>{file ? file.name : 'Choose a CSV or bank statement'}</strong><small>CSV, camt.053 XML, or BAI2 &middot; up to 2 MB per import &middot; 10,000 records per workspace</small><input aria-label="Choose import file" type="file" accept=".csv,text/csv,.xml,application/xml,text/xml,.bai,.bai2,.txt" onChange={e => { setFile(e.target.files[0] || null); setRefField('auto'); setRefPattern(''); setIncludeDebits(true); }} /></label>
 
                 {prepared?.converted && <div className="statement" aria-live="polite">
-                  <p className="banner info"><strong>{FORMAT_LABELS[prepared.format]}.</strong> Converted in this browser into the documented bank CSV, then checked below. Only booked credits become deposits.{prepared.csv && <> {plural(prepared.rows, 'credit', 'credits') + ' converted'}{prepared.skipped.debits > 0 && ', ' + plural(prepared.skipped.debits, 'debit', 'debits') + ' skipped'}{prepared.skipped.pending > 0 && ', ' + plural(prepared.skipped.pending, 'pending entry', 'pending entries') + ' skipped'}{prepared.skipped.unreadable > 0 && ', ' + plural(prepared.skipped.unreadable, 'entry', 'entries') + ' with an unreadable amount skipped'}.</>}</p>
+                  <p className="banner info"><strong>{FORMAT_LABELS[prepared.format]}.</strong> Converted in this browser into the documented bank CSV, then checked below. Booked credits become positive amounts and booked debits negative ones, as refund payouts settle.{prepared.csv && <> {plural(prepared.credits, 'credit', 'credits') + ' and ' + plural(prepared.debits, 'debit', 'debits') + ' converted'}{skipSummary(prepared.skipped) !== 'no entries' && '; ' + skipSummary(prepared.skipped)}.</>}</p>
                   <div className="mapping">
                     <label>Payout reference from<select value={refField} onChange={e => setRefField(e.target.value)} aria-describedby="reffield-hint">{REFERENCE_FIELDS[formatFamily(prepared.format)].map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select><small id="reffield-hint" className="fieldhint">{AUTO_HINTS[formatFamily(prepared.format)]}</small></label>
-                    <label>Reference pattern (optional)<input value={refPattern} onChange={e => setRefPattern(e.target.value)} placeholder="e.g. PO-\d+" spellCheck={false} autoComplete="off" aria-describedby="pattern-hint" /><small id="pattern-hint" className="fieldhint">Keeps only the first part of the field that matches, such as the payout ID inside longer text.</small></label>
+                    <label>Reference pattern (optional)<input value={refPattern} onChange={e => setRefPattern(e.target.value)} placeholder="e.g. PO-\d+" spellCheck={false} autoComplete="off" aria-describedby="pattern-hint" /><small id="pattern-hint" className="fieldhint">Keeps the part of the field that matches, such as the payout ID inside longer text. Entries with no match are skipped and counted.</small></label>
                   </div>
+                  <label className="checkline"><input type="checkbox" checked={includeDebits} onChange={e => setIncludeDebits(e.target.checked)} aria-describedby="debits-hint" />Include debits as negative amounts</label>
+                  <small id="debits-hint" className="fieldhint">A refund payout settles as a bank debit, so leaving debits out can make it look like a missing deposit. Turn this off only when the statement&rsquo;s debits have nothing to do with processor payouts.</small>
                 </div>}
                 {prepared?.error && <p className="banner warn" role="alert">{prepared.error}</p>}
 

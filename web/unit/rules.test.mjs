@@ -106,3 +106,13 @@ test('the many-to-one pass is skipped, and says so, above the size limit', () =>
   assert.equal(r.combinedSkipped, true);
   assert.equal(r.combined.length, 0);
 });
+
+test('when nothing is within tolerance, the smallest open difference is reported', () => {
+  const { cases, records } = workspace();
+  cases.push(kase('c5', 'PO-5', 'amount_mismatch', 1000, 1050, ['p:1']), kase('c6', 'PO-6', 'amount_mismatch', 1000, 900, ['p:1']));
+  const r = dryRun(cases, records, { amountCents: 10, dateDays: 3, maxEdits: null });
+  assert.equal(r.tolerance.length, 0);
+  // PO-1 and PO-5 both differ by 50 cents (one each way); PO-6 by 100.
+  assert.deepEqual(r.nearest, { gap: 50, count: 2 });
+  assert.equal(dryRun(cases, records, { amountCents: 100, dateDays: 3, maxEdits: null }).nearest, null);
+});

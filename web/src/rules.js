@@ -60,6 +60,16 @@ export function dryRun(cases, records, rules) {
     .map(c => ({ case: c, gap: Math.abs(c.delta_cents) }))
     .sort((a, b) => a.gap - b.gap);
 
+  // The smallest open mismatch the current tolerance misses, so the reviewer can see how far
+  // the rule is from the data instead of guessing a number.
+  let nearest = null;
+  for (const c of open) {
+    const gap = Math.abs(c.delta_cents);
+    if (c.kind !== 'amount_mismatch' || gap <= r.amountCents) continue;
+    if (!nearest || gap < nearest.gap) nearest = { gap, count: 1 };
+    else if (gap === nearest.gap) nearest.count++;
+  }
+
   // A side without a dated record cannot satisfy a date rule, so it is left out.
   const awaiting = open.filter(c => c.kind === 'awaiting_deposit').map(c => ({ c, date: lastDate(c, records, 'processor') })).filter(a => a.date);
   const deposits = open.filter(c => c.kind === 'unexpected_deposit').map(c => ({ c, date: lastDate(c, records, 'bank') })).filter(d => d.date);
@@ -111,6 +121,7 @@ export function dryRun(cases, records, rules) {
   return {
     rules: r,
     tolerance,
+    nearest,
     pairs,
     combined,
     combinedSkipped,
