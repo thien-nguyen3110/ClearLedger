@@ -5,6 +5,8 @@ import { previewCSV } from './csv.js';
 import { Icon } from './Icon.jsx';
 import { Logo } from './Logo.jsx';
 import { CaseDetail } from './CaseDetail.jsx';
+import { RulesPreview } from './RulesPreview.jsx';
+import { AUTO_HINTS, FORMAT_LABELS, REFERENCE_FIELDS, formatFamily, prepareImport } from './statement.js';
 import {
   activityGroup, activityLabel, amountQuery, asOfDate, bridge, closeProgress, configModeLabel, csvCell,
   daysBetween, describeDiff, describeError, diffStates, exceptionKinds, kindLabels, lastDate, money,
@@ -33,6 +35,7 @@ const VIEWS = [
   ['Imports', 'upload', 'imports'],
   ['Activity', 'clock', 'activity'],
   ['Close report', 'report', 'report'],
+  ['Matching rules', 'rules', 'rules'],
 ];
 const KIND_WORDS = { awaiting: 'awaiting_deposit', mismatch: 'amount_mismatch', multiple: 'ambiguous_deposit', unexpected: 'unexpected_deposit' };
 const SORT_WORDS = { expected: 'expected_cents', received: 'actual_cents', difference: 'delta_cents', diff: 'delta_cents' };
@@ -62,6 +65,10 @@ function App() {
   const [source, setSource] = useState('processor');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  // Bank statements (camt.05x, BAI2) are converted to the documented CSV before preview and import.
+  const [prepared, setPrepared] = useState(null);
+  const [refField, setRefField] = useState('auto');
+  const [refPattern, setRefPattern] = useState('');
   const [activityFilter, setActivityFilter] = useState('all');
   const [picked, setPicked] = useState(() => new Set());
   const [bulkNote, setBulkNote] = useState('');
@@ -151,11 +158,18 @@ function App() {
   }, [data]);
 
   useEffect(() => {
-    if (!file) { setPreview(null); return; }
+    if (!file) { setPrepared(null); setPreview(null); return; }
     let cancelled = false;
-    file.text().then(text => { if (!cancelled) setPreview(previewCSV(source, text)); }).catch(() => { if (!cancelled) setPreview(null); });
+    file.text().then(text => {
+      if (cancelled) return;
+      const p = prepareImport(text, { referenceField: refField, pattern: refPattern });
+      // A statement only carries bank deposits, so it always imports as the bank source.
+      if (p.converted && source !== 'bank') setSource('bank');
+      setPrepared(p);
+      setPreview(p.csv ? previewCSV(p.converted ? 'bank' : source, p.csv) : null);
+    }).catch(() => { if (!cancelled) { setPrepared(null); setPreview(null); } });
     return () => { cancelled = true; };
-  }, [file, source]);
+  }, [file, source, refField, refPattern]);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [log]);
 
@@ -273,9 +287,12 @@ function App() {
   async function submitImport() {
     setBusy('import'); setProblem(null); setNotice('');
     try {
-      const csv = await file.text();
-      const key = await idempotencyKeyFor(source, csv);
-      await api('import', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify({ source, csv }) });
+      // The converted CSV is what gets sent, so the idempotency key follows the conversion:
+      // the same statement with the same reference choice always maps to the same key.
+      const csv = prepared.csv;
+      const from = prepared.converted ? 'bank' : source;
+      const key = await idempotencyKeyFor(from, csv);
+      await api('import', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify({ source: from, csv }) });
       const { diff } = await refresh();
       const what = describeDiff(diff);
       setNotice(diff.revisionChanged
@@ -467,7 +484,7 @@ function App() {
         break;
       case 'go': {
         const target = VIEWS.find(([name, , slug]) => slug === arg.toLowerCase() || name.toLowerCase() === arg.toLowerCase());
-        if (!target) print('Use: go reconcile | imports | activity | report', 'err'); else { setView(target[0]); print('Opened ' + target[0] + '.'); }
+        if (!target) print('Use: go reconcile | imports | activity | report | rules', 'err'); else { setView(target[0]); print('Opened ' + target[0] + '.'); }
         break;
       }
       case 'refresh': print('Checking for updates.'); checkNow(); break;
@@ -499,7 +516,7 @@ function App() {
         x: () => { if (k.active?.status === 'open') k.togglePick(k.active.id); },
         i: () => { if (k.active?.status === 'open' && !k.investigatingId) k.investigate(k.active.id); },
         n: () => { const el = document.getElementById('review-note'); if (el) el.focus(); },
-        1: () => setView('Reconciliation'), 2: () => setView('Imports'), 3: () => setView('Activity'), 4: () => setView('Close report'),
+        1: () => setView('Reconciliation'), 2: () => setView('Imports'), 3: () => setView('Activity'), 4: () => setView('Close report'), 5: () => setView('Matching rules'),
         Escape: () => setHelpOpen(false),
       }[e.key];
       if (act) { e.preventDefault(); act(); }
@@ -510,9 +527,10 @@ function App() {
 
   const headings = {
     Reconciliation: ['Reconciliation', 'Compare expected processor payouts with what reached the bank, and decide what to do about each difference.'],
-    Imports: ['Imports', 'Add processor activity and bank deposits in the documented CSV format.'],
+    Imports: ['Imports', 'Add processor activity and bank deposits as CSV, or bank deposits from a camt.053 or BAI2 statement.'],
     Activity: ['Activity', 'Imports, draft suggestions, failures, and your reviews, newest first.'],
     'Close report': ['Close report', 'Everything a client or reviewer needs for this close: totals, the bridge, open items, and your notes.'],
+    'Matching rules': ['Matching rules', 'Try tolerance rules on the open payouts and see which ones they would pair up, without changing anything.'],
   };
   const slug = VIEWS.find(v => v[0] === view)[2];
   const storageLabel = config?.storage === 'postgres' ? 'postgres' : 'local';
@@ -697,10 +715,20 @@ function App() {
 
             {!needsToken && view === 'Imports' && <div className="importgrid">
               <section className="panel importpanel">
-                <h2>Import a CSV</h2>
+                <h2>Import records</h2>
                 <p>Use one currency and stable record IDs. Importing the same records again won&rsquo;t duplicate them.</p>
-                <label>Record source<select value={source} onChange={e => setSource(e.target.value)}><option value="processor">Processor activity</option><option value="bank">Bank deposits</option></select></label>
-                <label className="filedrop"><Icon name="upload" /><strong>{file ? file.name : 'Choose a CSV file'}</strong><small>Up to 2 MB per import &middot; 10,000 records per workspace</small><input aria-label="Choose CSV file" type="file" accept=".csv,text/csv" onChange={e => setFile(e.target.files[0] || null)} /></label>
+                <label>Record source<select value={source} onChange={e => setSource(e.target.value)} disabled={!!prepared?.converted} aria-describedby={prepared?.converted ? 'source-hint' : undefined}><option value="processor">Processor activity</option><option value="bank">Bank deposits</option></select>
+                  {prepared?.converted && <small id="source-hint" className="fieldhint">Bank statements always import as bank deposits.</small>}</label>
+                <label className="filedrop"><Icon name="upload" /><strong>{file ? file.name : 'Choose a CSV or bank statement'}</strong><small>CSV, camt.053 XML, or BAI2 &middot; up to 2 MB per import &middot; 10,000 records per workspace</small><input aria-label="Choose import file" type="file" accept=".csv,text/csv,.xml,application/xml,text/xml,.bai,.bai2,.txt" onChange={e => { setFile(e.target.files[0] || null); setRefField('auto'); setRefPattern(''); }} /></label>
+
+                {prepared?.converted && <div className="statement" aria-live="polite">
+                  <p className="banner info"><strong>{FORMAT_LABELS[prepared.format]}.</strong> Converted in this browser into the documented bank CSV, then checked below. Only booked credits become deposits.{prepared.csv && <> {plural(prepared.rows, 'credit', 'credits') + ' converted'}{prepared.skipped.debits > 0 && ', ' + plural(prepared.skipped.debits, 'debit', 'debits') + ' skipped'}{prepared.skipped.pending > 0 && ', ' + plural(prepared.skipped.pending, 'pending entry', 'pending entries') + ' skipped'}{prepared.skipped.unreadable > 0 && ', ' + plural(prepared.skipped.unreadable, 'entry', 'entries') + ' with an unreadable amount skipped'}.</>}</p>
+                  <div className="mapping">
+                    <label>Payout reference from<select value={refField} onChange={e => setRefField(e.target.value)} aria-describedby="reffield-hint">{REFERENCE_FIELDS[formatFamily(prepared.format)].map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select><small id="reffield-hint" className="fieldhint">{AUTO_HINTS[formatFamily(prepared.format)]}</small></label>
+                    <label>Reference pattern (optional)<input value={refPattern} onChange={e => setRefPattern(e.target.value)} placeholder="e.g. PO-\d+" spellCheck={false} autoComplete="off" aria-describedby="pattern-hint" /><small id="pattern-hint" className="fieldhint">Keeps only the first part of the field that matches, such as the payout ID inside longer text.</small></label>
+                  </div>
+                </div>}
+                {prepared?.error && <p className="banner warn" role="alert">{prepared.error}</p>}
 
                 {file && file.size > REQUEST_LIMIT_BYTES * 0.95 && <p className="banner warn" role="note">This file is {(file.size / 1024 / 1024).toFixed(1)} MB. The server accepts up to 2 MB per import, so it will probably be rejected. Split it into smaller files.</p>}
 
@@ -714,11 +742,11 @@ function App() {
                     <tbody>{preview.sample.map((r, i) => <tr key={i}><td>{r.id}</td><td>{r.payout}</td><td>{r.date}</td><td className="num">{money(r.gross_cents)}</td><td className="num">{money(r.fee_cents)}</td></tr>)}</tbody></table></div>}
                 </div>}
 
-                <button className="primary" disabled={!file || !!busy} onClick={submitImport}>{busy === 'import' ? 'Importing…' : 'Import and reconcile'}<Icon name="arrow" /></button>
+                <button className="primary" disabled={!file || !prepared?.csv || !!busy} onClick={submitImport}>{busy === 'import' ? 'Importing…' : 'Import and reconcile'}<Icon name="arrow" /></button>
               </section>
               <section className="panel guide">
                 <h2>Start with the right format</h2>
-                <p>This release accepts one documented, normalized format. Native Stripe and bank export mapping is planned, not available yet.</p>
+                <p>Processor activity uses one documented, normalized CSV format. Bank deposits can also come straight from an ISO 20022 camt.052, camt.053, or camt.054 statement or a BAI2 file. Native Stripe export mapping is planned, not available yet.</p>
                 <p className="samples"><a href="/samples/processor.csv" download>Download processor CSV</a><a href="/samples/bank.csv" download>Download bank CSV</a></p>
                 <h3>Before you import</h3>
                 <p>Amounts are integer cents. Processor refunds use negative gross amounts. Bank rows have a zero fee. Both files use the payout reference to link a payout to its deposit.</p>
@@ -785,6 +813,8 @@ function App() {
               <p className="reportfoot">A review records that someone checked the payout; it does not change amounts or mark money as recovered. The JSON evidence export is the source of record. Ages count days inside the imported records, not days since today, and are not overdue claims.</p>
             </article>}
 
+            {!needsToken && data && view === 'Matching rules' && <RulesPreview cases={cases} records={data.records} onOpenCase={id => { setView('Reconciliation'); selectCase(id); }} />}
+
             <footer>Source records are preserved. Investigations are drafts. You decide the next action. The activity history is an application log, not a tamper-proof audit record.</footer>
           </div>
 
@@ -799,7 +829,7 @@ function App() {
                 <div><dt><kbd>Ctrl</kbd>+<kbd>Enter</kbd></dt><dd>record the review, then go to the next open payout</dd></div>
                 <div><dt><kbd>/</kbd></dt><dd>search, including amounts like 2.00</dd></div>
                 <div><dt><kbd>:</kbd></dt><dd>type a command</dd></div>
-                <div><dt><kbd>1</kbd>–<kbd>4</kbd></dt><dd>switch section</dd></div>
+                <div><dt><kbd>1</kbd>–<kbd>5</kbd></dt><dd>switch section</dd></div>
               </dl>
               <dl className="kv">
                 <div><dt>open PO-1002</dt><dd>open a payout by reference</dd></div>
@@ -809,7 +839,7 @@ function App() {
                 <div><dt>sort difference desc</dt><dd>expected, received, difference, none</dd></div>
                 <div><dt>review &lt;note&gt;</dt><dd>record a review on the open payout</dd></div>
                 <div><dt>select open</dt><dd>select every open payout shown</dd></div>
-                <div><dt>go report</dt><dd>reconcile, imports, activity, report</dd></div>
+                <div><dt>go rules</dt><dd>reconcile, imports, activity, report, rules</dd></div>
               </dl>
             </div>
           </section>}

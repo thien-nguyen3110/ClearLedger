@@ -63,7 +63,7 @@ test('CSV import preview flags invalid rows without contacting the server', asyn
   await page.getByRole('button', { name: 'Imports' }).click();
 
   const badCsv = [csvHeader, '9002,PO-9002,EUR,02/01/2026,abc,100,Bad row'].join('\n');
-  await page.getByLabel('Choose CSV file').setInputFiles({ name: 'bad.csv', mimeType: 'text/csv', buffer: Buffer.from(badCsv) });
+  await page.getByLabel('Choose import file').setInputFiles({ name: 'bad.csv', mimeType: 'text/csv', buffer: Buffer.from(badCsv) });
 
   await expect(page.locator('.previewbad')).toContainText('0 of 1 row(s) look valid');
   await expect(page.locator('.previewerrors')).toContainText('this release supports USD only');
@@ -82,7 +82,7 @@ test('a failed import retries with the same idempotency key; a changed file gets
   await page.getByRole('button', { name: 'Imports' }).click();
 
   const goodCsv = [csvHeader, '9001,PO-9001,USD,2026-02-01,5000,100,Test settlement'].join('\n');
-  await page.getByLabel('Choose CSV file').setInputFiles({ name: 'good.csv', mimeType: 'text/csv', buffer: Buffer.from(goodCsv) });
+  await page.getByLabel('Choose import file').setInputFiles({ name: 'good.csv', mimeType: 'text/csv', buffer: Buffer.from(goodCsv) });
   await expect(page.locator('.previewgood')).toContainText('1 row(s) match the expected format.');
 
   await page.getByRole('button', { name: 'Import and reconcile' }).click();
@@ -112,7 +112,7 @@ test('a failed import retries with the same idempotency key; a changed file gets
   // A different file must use a different key: this is a new logical submission.
   await page.getByRole('button', { name: 'Imports' }).click();
   const otherCsv = [csvHeader, '9003,PO-9003,USD,2026-02-01,6000,100,Different row'].join('\n');
-  await page.getByLabel('Choose CSV file').setInputFiles({ name: 'other.csv', mimeType: 'text/csv', buffer: Buffer.from(otherCsv) });
+  await page.getByLabel('Choose import file').setInputFiles({ name: 'other.csv', mimeType: 'text/csv', buffer: Buffer.from(otherCsv) });
   await page.getByRole('button', { name: 'Import and reconcile' }).click();
   // The mock state did not change, so nothing new was reconciled from this file.
   await expect(page.getByRole('status')).toContainText('no new records, everything in this file was already imported');

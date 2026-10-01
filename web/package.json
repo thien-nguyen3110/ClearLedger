@@ -6,6 +6,7 @@
  "type": "module",
  "scripts": {
   "build": "node build.mjs",
+  "test:unit": "node --test \"unit/*.test.mjs\"",
   "test:e2e": "npm run build && playwright test"
  },
  "dependencies": {

@@ -387,6 +387,31 @@ th[aria-sort=ascending] .sortmark, th[aria-sort=descending] .sortmark { opacity:
 .glossary dt { font-weight: 700; color: var(--p1); }
 .glossary dd { margin: 2px 0 0; color: var(--ink); }
 
+/* Bank statement mapping on the import screen */
+.statement { margin: 0 0 14px; }
+.mapping { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.mapping label, .rulespanel label { display: block; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+.mapping select, .mapping input, .rulespanel input, .rulespanel select { display: block; width: 100%; margin-top: 6px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.fieldhint, .rulespanel label small { display: block; margin-top: 5px; color: var(--muted); font-size: 11.5px; font-weight: 400; text-transform: none; letter-spacing: 0; line-height: 1.45; }
+.rulespanel label small.fielderror { color: var(--p1); font-weight: 700; }
+.rulespanel label small.fielderror::before { content: "! "; }
+.rulespanel input[aria-invalid=true] { border-color: var(--p1); border-style: dashed; }
+
+/* Matching rules dry run */
+.rulesgrid { display: grid; grid-template-columns: minmax(260px, .7fr) minmax(0, 2fr); gap: 18px; align-items: start; }
+.rulespanel, .rulesresults { padding: 20px 22px; }
+.rulespanel h2 { font: 400 30px/1.05 var(--display); color: var(--p1); margin: 0 0 8px; text-shadow: var(--glow); }
+.rulespanel p { line-height: 1.6; margin: 0 0 14px; }
+.rulespanel form { display: grid; gap: 16px; margin-bottom: 16px; justify-items: start; }
+.rulespanel form label { width: 100%; }
+.rulesresults .panelheading { padding: 0 0 10px; }
+.rulesresults h3 { font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--p1); margin: 22px 0 6px; }
+.rulesresults > p.muted { margin: 0 0 8px; }
+.rulesresults .tablewrap { max-height: 420px; }
+.rulesresults th .tag { margin-left: 6px; }
+.rulesresults tbody th small { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; font-weight: 400; }
+.rulesresults small.inline { display: inline; margin: 0; }
+
 /* Activity prints as a session log */
 .activitylist { list-style: none; margin: 0; padding: 0; }
 .activityrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; padding: 10px 16px; border-top: 1px dashed var(--rule); gap: 12px; align-items: start; }
@@ -488,6 +513,8 @@ footer::before { content: "# "; color: var(--after); }
   .detailhead { padding: 12px; }
   .detailhead h2 { font-size: 28px; }
   .importgrid { grid-template-columns: minmax(0, 1fr); }
+  .rulesgrid, .mapping { grid-template-columns: minmax(0, 1fr); }
+  .rulespanel, .rulesresults { padding: 16px 14px; }
   .importpanel, .guide { padding: 16px 14px; }
   .activityrow { grid-template-columns: auto minmax(0, 1fr); padding: 10px 12px; }
   .activityrow time { grid-column: 2; }
