@@ -188,7 +188,7 @@ test.describe('1,000-transaction workspace', () => {
 
     const { mockApi } = await openWorkspace(page, scaleState());
     await page.getByRole('button', { name: 'Imports' }).click();
-    await page.getByLabel('Choose CSV file').setInputFiles({ name: 'processor-scale.csv', mimeType: 'text/csv', buffer: Buffer.from(csv, 'utf8') });
+    await page.getByLabel('Choose import file').setInputFiles({ name: 'processor-scale.csv', mimeType: 'text/csv', buffer: Buffer.from(csv, 'utf8') });
     await expect(page.getByText(`${processorRows.length} row(s) match the expected format.`)).toBeVisible();
     await expect(page.getByText(/row\(s\) look valid/)).toHaveCount(0);
 

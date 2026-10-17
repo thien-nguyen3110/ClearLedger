@@ -20,6 +20,7 @@ const paths = {
   terminal: 'M4 17l6-5-6-5 M12 19h8',
   report: 'M6 3h9l3 3v15H6z M9 10h6 M9 14h6 M9 18h3',
   keys: 'M3 6h18v12H3z M7 10h.01 M11 10h.01 M15 10h.01 M7 14h10',
+  rules: 'M4 6h9 M17 6h3 M4 12h3 M11 12h9 M4 18h11 M19 18h1 M15 4v4 M9 10v4 M17 16v4',
 };
 
 export function Icon({ name = 'grid' }) {
