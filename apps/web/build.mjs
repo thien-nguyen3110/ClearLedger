@@ -5,4 +5,4 @@ await build({entryPoints:['src/app.jsx'],bundle:true,minify:true,outfile:'dist/a
 await copyFile('src/style.css','dist/style.css');
 await copyFile('index.html','dist/index.html');
 await cp('src/fonts','dist/fonts',{recursive:true});
-await cp('../samples','dist/samples',{recursive:true});
+await cp('../../packages/samples','dist/samples',{recursive:true});

@@ -3,7 +3,7 @@
 // from a seeded PRNG; no real accounts, merchants, or amounts, and no Math.random.
 //
 // reconcileForFixture() below is TEST SCAFFOLDING ONLY. It mirrors the backend grouping
-// rules (backend/domain.go reconcile) just far enough to build a contract-shaped State for
+// rules (apps/api/domain.go reconcile) just far enough to build a contract-shaped State for
 // the Playwright API mock. It is not app logic: the server remains the only authority for
 // matching, totals, and case kinds, and the browser never runs this code.
 
@@ -273,7 +273,7 @@ function fnv1a(text, basis) {
   return h.toString(16).padStart(8, '0');
 }
 
-// TEST SCAFFOLDING ONLY: mirrors backend/domain.go reconcile() grouping rules so the API
+// TEST SCAFFOLDING ONLY: mirrors apps/api/domain.go reconcile() grouping rules so the API
 // mock can serve a contract-shaped State. Not app logic. Rules, in backend order:
 // banks > 1 -> ambiguous_deposit; processor == 0 -> unexpected_deposit; banks == 0 ->
 // awaiting_deposit; delta != 0 -> amount_mismatch; else matched (status matched).

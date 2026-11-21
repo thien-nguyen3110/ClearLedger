@@ -1,0 +1,7 @@
+# Required reviewers per folder. GitHub uses the last matching line.
+*                 @thien-nguyen3110
+/apps/web/        @thien-nguyen3110
+/apps/api/        @thien-nguyen3110
+/packages/        @thien-nguyen3110
+/infra/           @thien-nguyen3110
+/.github/         @thien-nguyen3110
