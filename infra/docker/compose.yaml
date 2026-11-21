@@ -53,7 +53,7 @@ services:
     entrypoint: ["/bin/sh", "-ec"]
     command: ["/opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic clearledger.reconciliation.v1 --partitions 1 --replication-factor 1 --bootstrap-server kafka:9092"]
   api:
-    build: .
+    build: {context: ../.., dockerfile: infra/docker/Dockerfile}
     environment: &app-env
       DATABASE_URL: postgres://clearledger:${POSTGRES_PASSWORD}@postgres:5432/clearledger?sslmode=disable
       REDIS_URL: redis://redis:6379/0
@@ -72,7 +72,7 @@ services:
       retries: 10
     restart: unless-stopped
   worker:
-    build: .
+    build: {context: ../.., dockerfile: infra/docker/Dockerfile}
     command: ["worker"]
     environment: *app-env
     depends_on:

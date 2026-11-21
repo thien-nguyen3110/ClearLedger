@@ -1,5 +1,6 @@
 # Keep local documentation and environment files out of the repository.
 *.[mM][dD]
+!.github/pull_request_template.md
 .env*
 *.env
 *.env.*
@@ -7,12 +8,23 @@ coordination/
 docs/*
 !docs/architecture.mmd
 
+# Local agent files (skills, CLAUDE.md, AGENTS.md copies) stay on this machine.
+.github/skills/
+.github/claude/
+.github/codex/
+
 # Dependencies, generated assets, and runtime data.
 node_modules/
+apps/web/dist/
+apps/api/data/
+apps/api/clearledger
+apps/api/clearledger.exe
+__pycache__/
+*.pyc
+*.log
+
+# Legacy paths: keep until every feature branch has moved to apps/ (then delete).
 web/dist/
 backend/data/
 backend/clearledger
 backend/clearledger.exe
-__pycache__/
-*.pyc
-*.log

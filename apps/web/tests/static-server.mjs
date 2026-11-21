@@ -1,5 +1,5 @@
 // Minimal static file server for the production bundle, used only by the browser test
-// suite (playwright.config.js). Serves web/dist exactly as the Go backend's
+// suite (playwright.config.js). Serves apps/web/dist exactly as the Go backend's
 // http.FileServer would for the same directory, with no /api/* handling: tests intercept
 // those requests at the network layer instead.
 import { createServer } from 'node:http';

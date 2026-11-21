@@ -103,7 +103,7 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("POST /api/demo", func(w http.ResponseWriter, r *http.Request) {
 		bodies := map[string]string{}
 		for _, source := range []string{"processor", "bank"} {
-			b, e := os.ReadFile(filepath.Join(env("SAMPLE_DIR", "../samples"), source+".csv"))
+			b, e := os.ReadFile(filepath.Join(env("SAMPLE_DIR", "../../packages/samples"), source+".csv"))
 			if e != nil {
 				fail(w, e)
 				return

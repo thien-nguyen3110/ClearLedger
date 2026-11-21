@@ -15,7 +15,7 @@ import (
 
 func fixture(t *testing.T, source string) string {
 	t.Helper()
-	b, e := os.ReadFile("../samples/" + source + ".csv")
+	b, e := os.ReadFile("../../packages/samples/" + source + ".csv")
 	if e != nil {
 		t.Fatal(e)
 	}

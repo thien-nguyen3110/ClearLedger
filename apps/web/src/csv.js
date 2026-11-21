@@ -1,5 +1,5 @@
 // RFC 4180 CSV parsing for the import preview. This is a format check only: the server
-// (backend/domain.go parseCSV) remains the authoritative parser and validator.
+// (apps/api/domain.go parseCSV) remains the authoritative parser and validator.
 
 // Parses CSV text into an array of rows (arrays of strings). Handles quoted fields,
 // embedded commas and newlines, and doubled-quote escaping ("" -> "). Does not treat a
@@ -52,7 +52,7 @@ const REQUIRED_HEADER = ['id', 'payout', 'currency', 'date', 'gross_cents', 'fee
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_ERRORS_SHOWN = 20;
 
-// Mirrors the server's validation rules (backend/domain.go parseCSV) closely enough to
+// Mirrors the server's validation rules (apps/api/domain.go parseCSV) closely enough to
 // give the user useful early feedback. It never decides what the server will accept.
 export function previewCSV(source, text) {
   const rows = parseCSV(text);

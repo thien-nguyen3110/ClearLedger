@@ -1,0 +1,12 @@
+{
+  "name": "clearledger",
+  "private": true,
+  "description": "Repo-level shortcuts. Each app keeps its own dependencies in apps/*.",
+  "scripts": {
+    "build:web": "npm --prefix apps/web ci --ignore-scripts && npm --prefix apps/web run build",
+    "test:api": "cd apps/api && go vet ./... && go test ./...",
+    "stack:config": "docker compose --env-file .env -f infra/docker/compose.yaml config --quiet",
+    "stack:up": "docker compose --env-file .env -f infra/docker/compose.yaml up -d --build",
+    "stack:down": "docker compose --env-file .env -f infra/docker/compose.yaml down"
+  }
+}

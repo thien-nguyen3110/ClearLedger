@@ -1,9 +1,9 @@
 %% ClearLedger application architecture
-%% web/: React workspace bundled with esbuild and served by the Go API.
-%% backend/: HTTP API, reconciliation domain, storage, agent, and event worker.
-%% compose.yaml: PostgreSQL, Redis, Kafka, API, worker, and optional Ollama.
-%% deploy/: optional Caddy reverse proxy and Cloudflare Tunnel configuration.
-%% samples/: synthetic CSV inputs. scripts/: deployment acceptance check.
+%% apps/web/: React workspace bundled with esbuild and served by the Go API.
+%% apps/api/: HTTP API, reconciliation domain, storage, agent, and event worker.
+%% infra/docker/: Dockerfile and compose.yaml with PostgreSQL, Redis, Kafka, API, worker, and optional Ollama.
+%% infra/deploy/: optional Caddy reverse proxy and Cloudflare Tunnel configuration.
+%% packages/samples/: synthetic CSV inputs. scripts/: deployment acceptance check.
 %% .github/workflows/: backend tests, static checks, frontend build, Compose validation.
 %% Local mode uses JSON file storage and direct investigations, without outbox or worker.
 %% PostgreSQL stores one bounded JSONB workspace aggregate and a transactional outbox.
